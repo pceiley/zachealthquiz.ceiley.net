@@ -1,0 +1,554 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Answer Sheet — Health Quizzes for Life</title>
+        <style>
+            *, *::before, *::after { box-sizing: border-box; }
+
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: #0b0f14;
+                color: white;
+            }
+
+            header {
+                position: sticky;
+                top: 0;
+                background: rgba(0, 0, 0, 0.9);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 12px 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                z-index: 100;
+            }
+
+            header h1 {
+                margin: 0;
+                font-size: clamp(18px, 4vw, 24px);
+                flex: 1;
+            }
+
+            .backBtn {
+                padding: 8px 16px;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .backBtn:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .printBtn {
+                padding: 8px 16px;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-radius: 8px;
+                background: #2a5a2a;
+                color: white;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+
+            .printBtn:hover {
+                background: #3a7a3a;
+            }
+
+            @media print {
+                body {
+                    background: white;
+                    color: black;
+                    font-size: 11pt;
+                }
+
+                header {
+                    position: static;
+                    background: white;
+                    border-bottom: 2px solid black;
+                    padding: 8px 0;
+                }
+
+                header h1 {
+                    color: black;
+                    font-size: 18pt;
+                }
+
+                .backBtn, .printBtn { display: none; }
+
+                main {
+                    padding: 12px 0;
+                    max-width: 100%;
+                }
+
+                .category {
+                    margin-bottom: 24pt;
+                }
+
+                .category-title {
+                    background: white !important;
+                    color: black;
+                    border-left-width: 4px;
+                    border-left-style: solid;
+                    padding: 6px 12px;
+                    font-size: 14pt;
+                    margin-bottom: 8pt;
+                }
+
+                .physical .category-title  { border-left-color: #2ecc71; }
+                .mental .category-title     { border-left-color: #3498db; }
+                .social .category-title     { border-left-color: #9b59b6; }
+                .emotional .category-title  { border-left-color: #e67e22; }
+
+                .question-block {
+                    background: white;
+                    border: 1px solid #ccc;
+                    border-radius: 6px;
+                    padding: 8px 10px;
+                    margin-bottom: 6pt;
+                    break-inside: avoid;
+                }
+
+                .question-text {
+                    color: black;
+                    font-size: 10.5pt;
+                    margin-bottom: 5pt;
+                }
+
+                .question-num { color: #555; }
+
+                .answer {
+                    color: #555;
+                    font-size: 10pt;
+                    padding: 3px 8px;
+                }
+
+                .answer.correct {
+                    background: #e8f8ee;
+                    color: black;
+                    font-weight: 700;
+                }
+
+                .answer.correct .marker { color: #1a8a3a; }
+                .answer:not(.correct) .marker { color: transparent; }
+            }
+
+            main {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 24px 16px 48px;
+            }
+
+            .category {
+                margin-bottom: 40px;
+            }
+
+            .category-title {
+                font-size: clamp(18px, 4vw, 22px);
+                font-weight: 700;
+                padding: 10px 16px;
+                border-radius: 10px;
+                margin-bottom: 16px;
+            }
+
+            .physical .category-title  { background: #1a3a2a; border-left: 4px solid #2ecc71; }
+            .mental .category-title     { background: #1a2a3a; border-left: 4px solid #3498db; }
+            .social .category-title     { background: #2a1a3a; border-left: 4px solid #9b59b6; }
+            .emotional .category-title  { background: #3a2a1a; border-left: 4px solid #e67e22; }
+
+            .question-block {
+                background: #1a1a1a;
+                border-radius: 10px;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+            }
+
+            .question-text {
+                font-size: clamp(14px, 3vw, 16px);
+                font-weight: 600;
+                margin-bottom: 10px;
+                line-height: 1.4;
+            }
+
+            .question-num {
+                opacity: 0.5;
+                margin-right: 6px;
+            }
+
+            .answer {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 7px 10px;
+                border-radius: 7px;
+                font-size: clamp(13px, 2.8vw, 15px);
+                line-height: 1.3;
+                margin-bottom: 4px;
+                color: rgba(255, 255, 255, 0.4);
+            }
+
+            .answer.correct {
+                background: rgba(46, 204, 113, 0.15);
+                color: white;
+                font-weight: 600;
+            }
+
+            .answer .marker {
+                flex-shrink: 0;
+                width: 18px;
+                text-align: center;
+                font-size: 13px;
+            }
+
+            .answer.correct .marker { color: #2ecc71; }
+            .answer:not(.correct) .marker { color: transparent; }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Answer Sheet</h1>
+            <button class="printBtn" onclick="window.print()">Print</button>
+            <a class="backBtn" href="index.html">← Back to Menu</a>
+        </header>
+
+        <main>
+
+            <!-- PHYSICAL -->
+            <section class="category physical">
+                <div class="category-title">Physical Health</div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">1.</span>What are the five types of food groups</div>
+                    <div class="answer correct"><span class="marker">✓</span>grains, dairy, meats, fruits and vegetables</div>
+                    <div class="answer"><span class="marker">✓</span>beef, grains, dairy, oreos, pumpkin seeds</div>
+                    <div class="answer"><span class="marker">✓</span>carrot, onion, chocolate, potato and orange</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">2.</span>Is it important to eat food from each group?</div>
+                    <div class="answer"><span class="marker">✓</span>no</div>
+                    <div class="answer correct"><span class="marker">✓</span>yes</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">3.</span>How much sleep should you get each night?</div>
+                    <div class="answer"><span class="marker">✓</span>7 hours</div>
+                    <div class="answer correct"><span class="marker">✓</span>9 hours</div>
+                    <div class="answer"><span class="marker">✓</span>none at all</div>
+                    <div class="answer"><span class="marker">✓</span>4 hours</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">4.</span>Does sleep make you better at school?</div>
+                    <div class="answer correct"><span class="marker">✓</span>true</div>
+                    <div class="answer"><span class="marker">✓</span>false</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">5.</span>Why is hydration important during physical activity?</div>
+                    <div class="answer"><span class="marker">✓</span>To make you feel full</div>
+                    <div class="answer"><span class="marker">✓</span>To maintain focus</div>
+                    <div class="answer correct"><span class="marker">✓</span>To optimize sports performance and replace lost fluids</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">6.</span>Which of the following is a benefit of regular physical activity?</div>
+                    <div class="answer"><span class="marker">✓</span>Reduced flexibility</div>
+                    <div class="answer"><span class="marker">✓</span>Increased risk of injury</div>
+                    <div class="answer correct"><span class="marker">✓</span>Improved mental well-being</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">7.</span>What vitamin can be obtained from sunlight?</div>
+                    <div class="answer correct"><span class="marker">✓</span>Vitamin D</div>
+                    <div class="answer"><span class="marker">✓</span>Vitamin B</div>
+                    <div class="answer"><span class="marker">✓</span>Vitamin C</div>
+                    <div class="answer"><span class="marker">✓</span>Vitamin A</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">8.</span>What do vaccines help your body do?</div>
+                    <div class="answer"><span class="marker">✓</span>Make you feel sleepy</div>
+                    <div class="answer correct"><span class="marker">✓</span>Fight off pathogens (germs) in the future</div>
+                    <div class="answer"><span class="marker">✓</span>Increase your height</div>
+                    <div class="answer"><span class="marker">✓</span>Stop you from getting hungry</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">9.</span>What information should you share with the hospital if you are poisoned?</div>
+                    <div class="answer"><span class="marker">✓</span>Your address</div>
+                    <div class="answer"><span class="marker">✓</span>Time the poison occurred</div>
+                    <div class="answer"><span class="marker">✓</span>How old you are</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above (this is all very important information)</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">10.</span>Which organ is most commonly associated with long-term damage caused by heavy alcohol consumption?</div>
+                    <div class="answer"><span class="marker">✓</span>Lungs</div>
+                    <div class="answer correct"><span class="marker">✓</span>Liver</div>
+                    <div class="answer"><span class="marker">✓</span>Skin</div>
+                    <div class="answer"><span class="marker">✓</span>Ears</div>
+                </div>
+            </section>
+
+            <!-- MENTAL -->
+            <section class="category mental">
+                <div class="category-title">Mental Health</div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">1.</span>What is the first step in managing stress effectively?</div>
+                    <div class="answer"><span class="marker">✓</span>Ignoring the stress</div>
+                    <div class="answer correct"><span class="marker">✓</span>Identifying physical and emotional signs of stress</div>
+                    <div class="answer"><span class="marker">✓</span>Doing your school work non stop</div>
+                    <div class="answer"><span class="marker">✓</span>Suppressing feelings</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">2.</span>Which of the following is a physical symptom of stress?</div>
+                    <div class="answer"><span class="marker">✓</span>Feeling 'butterflies' or a stomach ache</div>
+                    <div class="answer"><span class="marker">✓</span>A racing heart</div>
+                    <div class="answer"><span class="marker">✓</span>Sweaty palms</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">3.</span>What is stress?</div>
+                    <div class="answer"><span class="marker">✓</span>A type of food that boosts energy</div>
+                    <div class="answer correct"><span class="marker">✓</span>A feeling caused by having a lot of things going on at once</div>
+                    <div class="answer"><span class="marker">✓</span>Something that only adults get</div>
+                    <div class="answer"><span class="marker">✓</span>A fun game</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">4.</span>How can sleep affect your cognitive health?</div>
+                    <div class="answer"><span class="marker">✓</span>It doesn't matter how much you sleep</div>
+                    <div class="answer"><span class="marker">✓</span>Too much sleep makes you smarter</div>
+                    <div class="answer correct"><span class="marker">✓</span>Good sleep improves focus, memory, and mood</div>
+                    <div class="answer"><span class="marker">✓</span>Less sleep helps you study better</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">5.</span>Which of the following could make someone feel calm?</div>
+                    <div class="answer correct"><span class="marker">✓</span>Talking to somebody about your feelings</div>
+                    <div class="answer"><span class="marker">✓</span>Falling over on the footpath</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">6.</span>What should you do if you are feeling angry?</div>
+                    <div class="answer correct"><span class="marker">✓</span>Take a deep breath</div>
+                    <div class="answer"><span class="marker">✓</span>Throw something at someone</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">7.</span>If you have any issues at our school, who do we go to?</div>
+                    <div class="answer"><span class="marker">✓</span>A wellbeing teacher</div>
+                    <div class="answer"><span class="marker">✓</span>Your Maths Teacher</div>
+                    <div class="answer"><span class="marker">✓</span>The Deputy Principal</div>
+                    <div class="answer"><span class="marker">✓</span>Your science teacher</div>
+                    <div class="answer correct"><span class="marker">✓</span>Any of the people listed above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">8.</span>Which of the following best describes mental wellbeing?</div>
+                    <div class="answer"><span class="marker">✓</span>Being happy and laughing 100% of the time</div>
+                    <div class="answer"><span class="marker">✓</span>Never having any problems or difficulties</div>
+                    <div class="answer correct"><span class="marker">✓</span>A positive state where you can handle life's challenges and feel good about yourself</div>
+                    <div class="answer"><span class="marker">✓</span>Being the most popular person in your school</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">9.</span>If a friend seems very sad or worried for a long time, what is the best thing you can do?</div>
+                    <div class="answer"><span class="marker">✓</span>Tell them to 'just get over it'</div>
+                    <div class="answer correct"><span class="marker">✓</span>Listen to them and encourage them to talk to a trusted adult</div>
+                    <div class="answer"><span class="marker">✓</span>Ignore them until they feel better</div>
+                    <div class="answer"><span class="marker">✓</span>Promise to keep it a secret even if you are worried about their safety</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">10.</span>True or False: Mental health is just as important as physical health.</div>
+                    <div class="answer correct"><span class="marker">✓</span>True</div>
+                    <div class="answer"><span class="marker">✓</span>False</div>
+                </div>
+            </section>
+
+            <!-- SOCIAL -->
+            <section class="category social">
+                <div class="category-title">Social Health</div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">1.</span>Which of these is a sign of a healthy friendship?</div>
+                    <div class="answer"><span class="marker">✓</span>They tell you who you are allowed to be friends with</div>
+                    <div class="answer"><span class="marker">✓</span>They make fun of you to make others laugh</div>
+                    <div class="answer correct"><span class="marker">✓</span>They listen to your opinions, even when they disagree</div>
+                    <div class="answer"><span class="marker">✓</span>They pressure you to do things you don't want to do</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">2.</span>What is a red flag in a relationship?</div>
+                    <div class="answer"><span class="marker">✓</span>Your friend wants to spend time with their family</div>
+                    <div class="answer correct"><span class="marker">✓</span>Your friend gets very angry if you hang out with anyone else</div>
+                    <div class="answer"><span class="marker">✓</span>Your friend tells you they feel sad</div>
+                    <div class="answer"><span class="marker">✓</span>Your friend asks for space to do their homework</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">3.</span>What is a good way to build a healthy relationship with your classroom teacher?</div>
+                    <div class="answer"><span class="marker">✓</span>Making rude jokes about them and forcing other students to laugh with you</div>
+                    <div class="answer"><span class="marker">✓</span>Being a bad student</div>
+                    <div class="answer correct"><span class="marker">✓</span>Saying hello every day, participating in class discussions and being respectful</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">4.</span>Why might a local council ask for feedback from young people about a new park design?</div>
+                    <div class="answer correct"><span class="marker">✓</span>To ensure the space meets the actual needs of the people using it</div>
+                    <div class="answer"><span class="marker">✓</span>Just to make the project take longer</div>
+                    <div class="answer"><span class="marker">✓</span>Because they don't know how to build a park</div>
+                    <div class="answer"><span class="marker">✓</span>To see who has the best handwriting</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">5.</span>Which of these is a health-promoting community resource?</div>
+                    <div class="answer"><span class="marker">✓</span>A local library with free workshops</div>
+                    <div class="answer"><span class="marker">✓</span>A community garden</div>
+                    <div class="answer"><span class="marker">✓</span>A PCYC or YMCA youth center</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">6.</span>A support network in a community can include:</div>
+                    <div class="answer"><span class="marker">✓</span>Teachers and school counsellors</div>
+                    <div class="answer"><span class="marker">✓</span>Coaches at a local sports club</div>
+                    <div class="answer"><span class="marker">✓</span>Family members and trusted neighbours</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">7.</span>Which is a non-benefit of parent-child communication?</div>
+                    <div class="answer correct"><span class="marker">✓</span>Yelling at them</div>
+                    <div class="answer"><span class="marker">✓</span>Explaining to them that they have to eat dinner</div>
+                    <div class="answer"><span class="marker">✓</span>Telling them why they have to go to school</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">8.</span>What is non-verbal communication?</div>
+                    <div class="answer"><span class="marker">✓</span>Sending a text message</div>
+                    <div class="answer"><span class="marker">✓</span>Talking loudly on the phone</div>
+                    <div class="answer correct"><span class="marker">✓</span>Using body language, facial expressions, and eye contact to share a message</div>
+                    <div class="answer"><span class="marker">✓</span>Writing a letter to a friend</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">9.</span>What is empathy in a conversation?</div>
+                    <div class="answer"><span class="marker">✓</span>Always agreeing with everything the other person says</div>
+                    <div class="answer"><span class="marker">✓</span>Feeling sorry for someone so you give them money</div>
+                    <div class="answer correct"><span class="marker">✓</span>Trying to understand and share the feelings of the person you are talking to</div>
+                    <div class="answer"><span class="marker">✓</span>Telling them that their problems aren't a big deal</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">10.</span>Which of these is an example of active listening?</div>
+                    <div class="answer"><span class="marker">✓</span>Looking at your watch while someone else talks</div>
+                    <div class="answer correct"><span class="marker">✓</span>Making eye contact and nodding to show you understand</div>
+                    <div class="answer"><span class="marker">✓</span>Thinking about what you are going to eat for lunch while they speak</div>
+                    <div class="answer"><span class="marker">✓</span>Interrupting them to tell your own story</div>
+                </div>
+            </section>
+
+            <!-- EMOTIONAL & SPIRITUAL -->
+            <section class="category emotional">
+                <div class="category-title">Emotional &amp; Spiritual Health</div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">1.</span>What is emotional regulation?</div>
+                    <div class="answer"><span class="marker">✓</span>Never feeling any big emotions like anger or fear</div>
+                    <div class="answer"><span class="marker">✓</span>Letting your emotions control everything you do</div>
+                    <div class="answer correct"><span class="marker">✓</span>Noticing how you feel and using strategies to stay in control of your actions</div>
+                    <div class="answer"><span class="marker">✓</span>Hiding your feelings so nobody knows you are sad</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">2.</span>Which of these is a sign of good spiritual wellbeing?</div>
+                    <div class="answer"><span class="marker">✓</span>Having the most expensive toys</div>
+                    <div class="answer correct"><span class="marker">✓</span>Feeling a sense of belonging and having a clear set of values (knowing what is right and wrong)</div>
+                    <div class="answer"><span class="marker">✓</span>Being the best at every sport</div>
+                    <div class="answer"><span class="marker">✓</span>Knowing everything about science</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">3.</span>How can gratitude improve your spiritual and emotional health?</div>
+                    <div class="answer"><span class="marker">✓</span>It makes people give you more presents</div>
+                    <div class="answer correct"><span class="marker">✓</span>It trains your brain to notice the good things in life, which can make you feel more peaceful and happy</div>
+                    <div class="answer"><span class="marker">✓</span>It helps you win arguments</div>
+                    <div class="answer"><span class="marker">✓</span>It doesn't actually do anything</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">4.</span>What does it mean to show empathy?</div>
+                    <div class="answer"><span class="marker">✓</span>Feeling sorry for yourself all the time</div>
+                    <div class="answer correct"><span class="marker">✓</span>Understanding and sharing the feelings of another person</div>
+                    <div class="answer"><span class="marker">✓</span>Telling someone else how they should feel</div>
+                    <div class="answer"><span class="marker">✓</span>Only thinking about your own problems</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">5.</span>Who can you talk to if you are feeling very sad or worried?</div>
+                    <div class="answer"><span class="marker">✓</span>A teacher or school counsellor</div>
+                    <div class="answer"><span class="marker">✓</span>A parent or guardian</div>
+                    <div class="answer"><span class="marker">✓</span>A trusted family member</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">6.</span>Spiritual health is often about connection. This can include a connection to:</div>
+                    <div class="answer"><span class="marker">✓</span>A higher power or religion</div>
+                    <div class="answer"><span class="marker">✓</span>Nature and the environment</div>
+                    <div class="answer"><span class="marker">✓</span>Your own inner self and values</div>
+                    <div class="answer correct"><span class="marker">✓</span>All of the above</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">7.</span>If two people have different spiritual beliefs, the healthiest approach is usually to:</div>
+                    <div class="answer"><span class="marker">✓</span>Try to argue until one person admits they are wrong</div>
+                    <div class="answer"><span class="marker">✓</span>Ignore the other person and never talk to them</div>
+                    <div class="answer correct"><span class="marker">✓</span>Respect their right to have their own beliefs, even if you don't agree</div>
+                    <div class="answer"><span class="marker">✓</span>Pretend to believe the same thing so there is no conflict</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">8.</span>Which of these is a way to connect with your inner self?</div>
+                    <div class="answer"><span class="marker">✓</span>Watching television with the volume turned up high</div>
+                    <div class="answer correct"><span class="marker">✓</span>Writing in a journal about your thoughts and feelings</div>
+                    <div class="answer"><span class="marker">✓</span>Listening to what your friends think you should do</div>
+                    <div class="answer"><span class="marker">✓</span>Following the most popular trends on social media</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">9.</span>When people talk about resilience in spiritual health, they mean:</div>
+                    <div class="answer"><span class="marker">✓</span>Being so strong that nothing ever makes you sad</div>
+                    <div class="answer correct"><span class="marker">✓</span>Using your inner beliefs and values to help you bounce back from hard times</div>
+                    <div class="answer"><span class="marker">✓</span>Being able to hold your breath underwater for a long time</div>
+                    <div class="answer"><span class="marker">✓</span>Never changing your mind about anything</div>
+                </div>
+
+                <div class="question-block">
+                    <div class="question-text"><span class="question-num">10.</span>What does it mean to have values?</div>
+                    <div class="answer"><span class="marker">✓</span>Having a lot of money in your piggy bank</div>
+                    <div class="answer correct"><span class="marker">✓</span>Things that are important to you, like being honest or helpful</div>
+                    <div class="answer"><span class="marker">✓</span>Being the loudest person in the classroom</div>
+                    <div class="answer"><span class="marker">✓</span>Knowing the names of all the planets</div>
+                </div>
+            </section>
+
+        </main>
+    </body>
+</html>
