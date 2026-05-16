@@ -997,6 +997,11 @@
                 updateHUD();
                 render();
             };
+
+            nameInput.addEventListener("input", () => {
+                data.name = nameInput.value;
+                save();
+            });
         </script>
         <!-- TUTORIAL SCREEN -->
         <div
