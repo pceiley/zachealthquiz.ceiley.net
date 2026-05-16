@@ -89,24 +89,12 @@
                 object-fit: cover;
             }
 
-            .free {
-                border-color: grey;
-            }
-            .lightblue {
-                border-color: lightblue;
-            }
-            .green {
-                border-color: limegreen;
-            }
-            .darkblue {
-                border-color: deepskyblue;
-            }
-            .orange {
-                border-color: orange;
-            }
-            .red {
-                border-color: red;
-            }
+            .free { border-color: grey; }
+            .lightblue { border-color: lightblue; }
+            .green { border-color: limegreen; }
+            .darkblue { border-color: deepskyblue; }
+            .orange { border-color: orange; }
+            .red { border-color: red; }
 
             .locked::after {
                 content: "";
@@ -138,6 +126,44 @@
                 color: white;
                 cursor: pointer;
             }
+
+            /* NEW GAME CONFIRM DIALOG */
+            #newGameDialog {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 30;
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+
+            #newGameDialog h2 {
+                font-size: 28px;
+                margin-bottom: 10px;
+            }
+
+            #newGameDialog p {
+                font-size: 16px;
+                color: #ccc;
+                margin-bottom: 24px;
+            }
+
+            #newGameDialog button {
+                margin: 8px;
+                padding: 14px 28px;
+                font-size: 18px;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                color: white;
+            }
+
+            #confirmNewGame { background: #cc0000; }
+            #cancelNewGame { background: #444; }
         </style>
     </head>
 
@@ -159,13 +185,11 @@
             <button onclick="openQuiz('physical')">Physical Quiz</button>
             <button onclick="openQuiz('mental')">Mental Quiz</button>
             <button onclick="openQuiz('social')">Social Quiz</button>
-            <button onclick="openQuiz('emotionalSpiritual')">
-                Emotional & Spiritual Quiz
-            </button>
+            <button onclick="openQuiz('emotionalSpiritual')">Emotional &amp; Spiritual Quiz</button>
             <button onclick="openQuiz('mixed20')">Mixed 20 Quiz</button>
             <button onclick="openLeaderboard()">Leaderboard</button>
-
             <button onclick="openAdmin()">Admin</button>
+            <button onclick="promptNewGame()" style="background:#cc0000;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;margin-top:10px;">New Game</button>
 
             <h2>Avatars</h2>
             <div id="avatarGrid" class="avatarGrid"></div>
@@ -176,11 +200,15 @@
             <div id="answers"></div>
         </div>
 
-        <div
-            id="leaderboard"
-            class="screen"
-            style="display: none; flex-direction: column; align-items: center"
-        ></div>
+        <!-- NEW GAME CONFIRM DIALOG -->
+        <div id="newGameDialog">
+            <h2>Start a New Game?</h2>
+            <p>This will reset your name, points, and avatar. Your score will stay on the leaderboard.</p>
+            <div>
+                <button id="confirmNewGame" onclick="confirmNewGame()">Yes, Reset</button>
+                <button id="cancelNewGame" onclick="closeNewGameDialog()">Cancel</button>
+            </div>
+        </div>
 
         <script>
             /* CORE */
@@ -194,6 +222,7 @@
             const home = document.getElementById("home");
             const quizBox = document.getElementById("quizBox");
             const nameInput = document.getElementById("nameInput");
+            const newGameDialog = document.getElementById("newGameDialog");
 
             /* DATA */
             let data = JSON.parse(localStorage.getItem("game")) || {
@@ -233,40 +262,20 @@
             socialMusic.loop = true;
             socialMusic.volume = 0.4;
 
-            /* AVATARS */
+            /* AVATAR SOUNDS */
             const avatarSounds = {
                 DJ: "https://static.wikia.nocookie.net/tower-defense-sim/images/5/53/DJBoothTrackChange1.ogg",
-
-                Gladiator:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/4/4c/GladiatorYell.ogg",
-
-                Commander:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/8/82/CommanderRework2.ogg",
-
-                Executioner:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/1/12/ExecutionerSwing.ogg",
-
+                Gladiator: "https://static.wikia.nocookie.net/tower-defense-sim/images/4/4c/GladiatorYell.ogg",
+                Commander: "https://static.wikia.nocookie.net/tower-defense-sim/images/8/82/CommanderRework2.ogg",
+                Executioner: "https://static.wikia.nocookie.net/tower-defense-sim/images/1/12/ExecutionerSwing.ogg",
                 John: "https://static.wikia.nocookie.net/tower-defense-sim/images/a/a3/John2.ogg",
-
                 Umbra: "https://static.wikia.nocookie.net/tower-defense-sim/images/3/3b/Night4Lost.ogg",
-
-                Engineer:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/c/c8/TheFinalActWave12-2.ogg",
-
-                NerdDuck:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/e/eb/BathroomApproachWave_32_1.ogg",
-
-                NullCommander:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/6/63/NullCommanderStrengthinNumbers.ogg/revision/latest?cb=20251019105921",
-
-                HallowPunk:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/7/74/UmbraLaugh2.ogg/revision/latest?cb=20241027195727",
-
-                Narrator:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/6/6f/TheFinalActWave30-2.ogg",
-
-                NarratorOld:
-                    "https://static.wikia.nocookie.net/tower-defense-sim/images/1/18/NarratorOld.ogg/revision/latest?cb=20260319192444",
+                Engineer: "https://static.wikia.nocookie.net/tower-defense-sim/images/c/c8/TheFinalActWave12-2.ogg",
+                NerdDuck: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/eb/BathroomApproachWave_32_1.ogg",
+                NullCommander: "https://static.wikia.nocookie.net/tower-defense-sim/images/6/63/NullCommanderStrengthinNumbers.ogg/revision/latest?cb=20251019105921",
+                HallowPunk: "https://static.wikia.nocookie.net/tower-defense-sim/images/7/74/UmbraLaugh2.ogg/revision/latest?cb=20241027195727",
+                Narrator: "https://static.wikia.nocookie.net/tower-defense-sim/images/6/6f/TheFinalActWave30-2.ogg",
+                NarratorOld: "https://static.wikia.nocookie.net/tower-defense-sim/images/1/18/NarratorOld.ogg/revision/latest?cb=20260319192444",
             };
 
             function playSound(name) {
@@ -277,61 +286,17 @@
 
             /* AVATARS */
             let avatars = [
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/cow.png",
-                    cost: 0,
-                    rarity: "free",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/otter.png",
-                    cost: 0,
-                    rarity: "free",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/chicken.png",
-                    cost: 50,
-                    rarity: "lightblue",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/zebra.png",
-                    cost: 150,
-                    rarity: "lightblue",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/lion.png",
-                    cost: 300,
-                    rarity: "green",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/wolf.png",
-                    cost: 350,
-                    rarity: "green",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/tiger.png",
-                    cost: 400,
-                    rarity: "green",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/shark.png",
-                    cost: 600,
-                    rarity: "darkblue",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/dinosaur.png",
-                    cost: 1000,
-                    rarity: "darkblue",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/bowhead-whale.png",
-                    cost: 2000,
-                    rarity: "orange",
-                },
-                {
-                    src: "https://www.google.com/logos/fnbx/animal_sounds/humpback-whale.png",
-                    cost: 2500,
-                    rarity: "orange",
-                },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/cow.png", cost: 0, rarity: "free" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/otter.png", cost: 0, rarity: "free" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/chicken.png", cost: 50, rarity: "lightblue" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/zebra.png", cost: 150, rarity: "lightblue" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/lion.png", cost: 300, rarity: "green" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/wolf.png", cost: 350, rarity: "green" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/tiger.png", cost: 400, rarity: "green" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/shark.png", cost: 600, rarity: "darkblue" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/dinosaur.png", cost: 1000, rarity: "darkblue" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/bowhead-whale.png", cost: 2000, rarity: "orange" },
+                { src: "https://www.google.com/logos/fnbx/animal_sounds/humpback-whale.png", cost: 2500, rarity: "orange" },
             ];
 
             /* ADMIN */
@@ -340,89 +305,18 @@
                 if (c !== "zacisthebest") return;
 
                 avatars = avatars.concat([
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/e0/NewerDjBooth0.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "DJ",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/1/1c/DefaultGladiatorIconIG.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Gladiator",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/9/99/Commander_Teaching.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Commander",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/3/39/ExecutionerPlush.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Executioner",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/e3/JohnMilitantIcon.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "John",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/7/73/UmbraAggressive.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Umbra",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/ec/EngineerIcon.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Engineer",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/4/4d/NerdDuckClear.png/revision/latest/scale-to-width-down/175?cb=20251210122732",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "NerdDuck",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/0/00/NullCommander.png/revision/latest/scale-to-width-down/536?cb=20251219011623",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "NullCommander",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/6/6b/HallowPunkIcon.png/revision/latest/scale-to-width-down/536?cb=20260311073305",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "HallowPunk",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/villains/images/4/4c/NarratorPoint2.png",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "Narrator",
-                    },
-
-                    {
-                        src: "https://static.wikia.nocookie.net/tower-defense-sim/images/0/0e/NarratorGoon1.png/revision/latest/scale-to-width-down/175?cb=20260319190440",
-                        cost: 0,
-                        rarity: "red",
-                        sound: "NarratorOld",
-                    },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/e0/NewerDjBooth0.png", cost: 0, rarity: "red", sound: "DJ" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/1/1c/DefaultGladiatorIconIG.png", cost: 0, rarity: "red", sound: "Gladiator" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/9/99/Commander_Teaching.png", cost: 0, rarity: "red", sound: "Commander" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/3/39/ExecutionerPlush.png", cost: 0, rarity: "red", sound: "Executioner" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/e3/JohnMilitantIcon.png", cost: 0, rarity: "red", sound: "John" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/7/73/UmbraAggressive.png", cost: 0, rarity: "red", sound: "Umbra" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/e/ec/EngineerIcon.png", cost: 0, rarity: "red", sound: "Engineer" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/4/4d/NerdDuckClear.png/revision/latest/scale-to-width-down/175?cb=20251210122732", cost: 0, rarity: "red", sound: "NerdDuck" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/0/00/NullCommander.png/revision/latest/scale-to-width-down/536?cb=20251219011623", cost: 0, rarity: "red", sound: "NullCommander" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/6/6b/HallowPunkIcon.png/revision/latest/scale-to-width-down/536?cb=20260311073305", cost: 0, rarity: "red", sound: "HallowPunk" },
+                    { src: "https://static.wikia.nocookie.net/villains/images/4/4c/NarratorPoint2.png", cost: 0, rarity: "red", sound: "Narrator" },
+                    { src: "https://static.wikia.nocookie.net/tower-defense-sim/images/0/0e/NarratorGoon1.png/revision/latest/scale-to-width-down/175?cb=20260319190440", cost: 0, rarity: "red", sound: "NarratorOld" },
                 ]);
 
                 render();
@@ -433,8 +327,7 @@
                 localStorage.setItem("game", JSON.stringify(data));
 
                 // Leaderboard update
-                let leaderboard =
-                    JSON.parse(localStorage.getItem("leaderboard")) || [];
+                let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
                 leaderboard = leaderboard.filter((x) => x.code !== data.code);
                 leaderboard.push({
                     name: data.name || "Unknown",
@@ -444,10 +337,7 @@
                 });
                 leaderboard.sort((a, b) => b.points - a.points);
                 leaderboard = leaderboard.slice(0, 20);
-                localStorage.setItem(
-                    "leaderboard",
-                    JSON.stringify(leaderboard),
-                );
+                localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
 
                 updateHUD();
                 render();
@@ -469,7 +359,6 @@
 
                     let img = document.createElement("img");
                     img.src = a.src;
-
                     d.appendChild(img);
 
                     d.onclick = () => {
@@ -483,420 +372,87 @@
                 });
             }
 
+            /* NEW GAME */
+            function promptNewGame() {
+                newGameDialog.style.display = "flex";
+            }
+
+            function closeNewGameDialog() {
+                newGameDialog.style.display = "none";
+            }
+
+            function confirmNewGame() {
+                data = {
+                    name: "",
+                    avatar: "",
+                    points: 0,
+                    code: Math.random().toString(36).slice(2, 8).toUpperCase(),
+                };
+                localStorage.setItem("game", JSON.stringify(data));
+                nameInput.value = "";
+                closeNewGameDialog();
+                updateHUD();
+                render();
+            }
+
             /* QUIZ DATA */
             const physicalBase = [
-                {
-                    q: "What are the five types of food groups",
-                    a: [
-                        "grains, dairy, meats, fruits and vegetables",
-                        "beef, grains, dairy, oreos, pumpkin seeds",
-                        "carrot, onion, chocolate, potato and orange",
-                    ],
-                    c: 0,
-                },
-
-                {
-                    q: "Is it important to eat food from each group?",
-                    a: ["no", "yes"],
-                    c: 1,
-                },
-
-                {
-                    q: "How much sleep should you get each night?",
-                    a: ["7 hours", "9 hours", "none at all", "4 hours"],
-                    c: 1,
-                },
-
-                {
-                    q: "Does sleep make you better at school?",
-                    a: ["true", "false"],
-                    c: 0,
-                },
-
-                {
-                    q: "Why is hydration important during physical activity?",
-                    a: [
-                        "To make you feel full",
-                        "To maintain focus",
-                        "To optimize sports performance and replace lost fluids",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Which of the following is a benefit of regular physical activity?",
-                    a: [
-                        "Reduced flexibility",
-                        "Increased risk of injury",
-                        "Improved mental well-being",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "What vitamin can be obtained from sunlight?",
-                    a: ["Vitamin D", "Vitamin B", "Vitamin C", "Vitamin A"],
-                    c: 0,
-                },
-
-                {
-                    q: "What do vaccines help your body do?",
-                    a: [
-                        "Make you feel sleepy",
-                        "Fight off pathogens (germs) in the future",
-                        "Increase your height",
-                        "Stop you from getting hungry",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "What information should you share with the hospital if you are poisoned?",
-                    a: [
-                        "Your address",
-                        "Time the poison occurred",
-                        "How old you are",
-                        "All of the above (this is all very important information)",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "Which organ is most commonly associated with long-term damage caused by heavy alcohol consumption?",
-                    a: ["Lungs", "Liver", "Skin", "Ears"],
-                    c: 1,
-                },
+                { q: "What are the five types of food groups", a: ["grains, dairy, meats, fruits and vegetables", "beef, grains, dairy, oreos, pumpkin seeds", "carrot, onion, chocolate, potato and orange"], c: 0 },
+                { q: "Is it important to eat food from each group?", a: ["no", "yes"], c: 1 },
+                { q: "How much sleep should you get each night?", a: ["7 hours", "9 hours", "none at all", "4 hours"], c: 1 },
+                { q: "Does sleep make you better at school?", a: ["true", "false"], c: 0 },
+                { q: "Why is hydration important during physical activity?", a: ["To make you feel full", "To maintain focus", "To optimize sports performance and replace lost fluids"], c: 2 },
+                { q: "Which of the following is a benefit of regular physical activity?", a: ["Reduced flexibility", "Increased risk of injury", "Improved mental well-being"], c: 2 },
+                { q: "What vitamin can be obtained from sunlight?", a: ["Vitamin D", "Vitamin B", "Vitamin C", "Vitamin A"], c: 0 },
+                { q: "What do vaccines help your body do?", a: ["Make you feel sleepy", "Fight off pathogens (germs) in the future", "Increase your height", "Stop you from getting hungry"], c: 1 },
+                { q: "What information should you share with the hospital if you are poisoned?", a: ["Your address", "Time the poison occurred", "How old you are", "All of the above (this is all very important information)"], c: 3 },
+                { q: "Which organ is most commonly associated with long-term damage caused by heavy alcohol consumption?", a: ["Lungs", "Liver", "Skin", "Ears"], c: 1 },
             ];
 
             const mentalBase = [
-                {
-                    q: "What is the first step in managing stress effectively?",
-                    a: [
-                        "Ignoring the stress",
-                        "Identifying physical and emotional signs of stress",
-                        "Doing your school work non stop",
-                        "Suppressing feelings",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "Which of the following is a physical symptom of stress?",
-                    a: [
-                        "Feeling 'butterflies' or a stomach ache",
-                        "A racing heart",
-                        "Sweaty palms",
-                        "All of the above",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "What is stress?",
-                    a: [
-                        "A type of food that boosts energy",
-                        "A feeling caused by having a lot of things going on at once",
-                        "Something that only adults get",
-                        "A fun game",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "How can sleep affect your cognitive health?",
-                    a: [
-                        "It doesn't matter how much you sleep",
-                        "Too much sleep makes you smarter",
-                        "Good sleep improves focus, memory, and mood",
-                        "Less sleep helps you study better",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Which of the following could make someone feel calm?",
-                    a: [
-                        "Talking to somebody about your feelings",
-                        "Falling over on the footpath",
-                    ],
-                    c: 0,
-                },
-
-                {
-                    q: "What should you do if you are feeling angry?",
-                    a: ["Take a deep breath", "Throw something at someone"],
-                    c: 0,
-                },
-
-                {
-                    q: "If you have any issues at our school, who do we go to?",
-                    a: [
-                        "A wellbeing teacher",
-                        "Your Maths Teacher",
-                        "The Deputy Principal",
-                        "Your science teacher",
-                        "Any of the people listed above",
-                    ],
-                    c: 4,
-                },
-
-                {
-                    q: "Which of the following best describes mental wellbeing?",
-                    a: [
-                        "Being happy and laughing 100% of the time",
-                        "Never having any problems or difficulties",
-                        "A positive state where you can handle life's challenges and feel good about yourself",
-                        "Being the most popular person in your school",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "If a friend seems very sad or worried for a long time, what is the best thing you can do?",
-                    a: [
-                        "Tell them to 'just get over it'",
-                        "Listen to them and encourage them to talk to a trusted adult",
-                        "Ignore them until they feel better",
-                        "Promise to keep it a secret even if you are worried about their safety",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "True or False: Mental health is just as important as physical health.",
-                    a: ["True", "False"],
-                    c: 0,
-                },
+                { q: "What is the first step in managing stress effectively?", a: ["Ignoring the stress", "Identifying physical and emotional signs of stress", "Doing your school work non stop", "Suppressing feelings"], c: 1 },
+                { q: "Which of the following is a physical symptom of stress?", a: ["Feeling 'butterflies' or a stomach ache", "A racing heart", "Sweaty palms", "All of the above"], c: 3 },
+                { q: "What is stress?", a: ["A type of food that boosts energy", "A feeling caused by having a lot of things going on at once", "Something that only adults get", "A fun game"], c: 1 },
+                { q: "How can sleep affect your cognitive health?", a: ["It doesn't matter how much you sleep", "Too much sleep makes you smarter", "Good sleep improves focus, memory, and mood", "Less sleep helps you study better"], c: 2 },
+                { q: "Which of the following could make someone feel calm?", a: ["Talking to somebody about your feelings", "Falling over on the footpath"], c: 0 },
+                { q: "What should you do if you are feeling angry?", a: ["Take a deep breath", "Throw something at someone"], c: 0 },
+                { q: "If you have any issues at our school, who do we go to?", a: ["A wellbeing teacher", "Your Maths Teacher", "The Deputy Principal", "Your science teacher", "Any of the people listed above"], c: 4 },
+                { q: "Which of the following best describes mental wellbeing?", a: ["Being happy and laughing 100% of the time", "Never having any problems or difficulties", "A positive state where you can handle life's challenges and feel good about yourself", "Being the most popular person in your school"], c: 2 },
+                { q: "If a friend seems very sad or worried for a long time, what is the best thing you can do?", a: ["Tell them to 'just get over it'", "Listen to them and encourage them to talk to a trusted adult", "Ignore them until they feel better", "Promise to keep it a secret even if you are worried about their safety"], c: 1 },
+                { q: "True or False: Mental health is just as important as physical health.", a: ["True", "False"], c: 0 },
             ];
 
             const socialBase = [
-                {
-                    q: "Which of these is a sign of a healthy friendship?",
-                    a: [
-                        "They tell you who you are allowed to be friends with",
-                        "They make fun of you to make others laugh",
-                        "They listen to your opinions, even when they disagree",
-                        "They pressure you to do things you don't want to do",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "What is a red flag in a relationship?",
-                    a: [
-                        "Your friend wants to spend time with their family",
-                        "Your friend gets very angry if you hang out with anyone else",
-                        "Your friend tells you they feel sad",
-                        "Your friend asks for space to do their homework",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "What is a good way to build a healthy relationship with your classroom teacher?",
-                    a: [
-                        "Making rude jokes about them and forcing other students to laugh with you",
-                        "Being a bad student",
-                        "Saying hello every day, participating in class discussions and being respectful",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Why might a local council ask for feedback from young people about a new park design?",
-                    a: [
-                        "To ensure the space meets the actual needs of the people using it",
-                        "Just to make the project take longer",
-                        "Because they don't know how to build a park",
-                        "To see who has the best handwriting",
-                    ],
-                    c: 0,
-                },
-
-                {
-                    q: "Which of these is a health-promoting community resource?",
-                    a: [
-                        "A local library with free workshops",
-                        "A community garden",
-                        "A PCYC or YMCA youth center",
-                        "All of the above",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "A support network in a community can include:",
-                    a: [
-                        "Teachers and school counsellors",
-                        "Coaches at a local sports club",
-                        "Family members and trusted neighbours",
-                        "All of the above",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "Which is a non-benefit of parent-child communication?",
-                    a: [
-                        "Yelling at them",
-                        "Explaining to them that they have to eat dinner",
-                        "Telling them why they have to go to school",
-                    ],
-                    c: 0,
-                },
-
-                {
-                    q: "What is non-verbal communication?",
-                    a: [
-                        "Sending a text message",
-                        "Talking loudly on the phone",
-                        "Using body language, facial expressions, and eye contact to share a message",
-                        "Writing a letter to a friend",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "What is empathy in a conversation?",
-                    a: [
-                        "Always agreeing with everything the other person says",
-                        "Feeling sorry for someone so you give them money",
-                        "Trying to understand and share the feelings of the person you are talking to",
-                        "Telling them that their problems aren't a big deal",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Which of these is an example of active listening?",
-                    a: [
-                        "Looking at your watch while someone else talks",
-                        "Making eye contact and nodding to show you understand",
-                        "Thinking about what you are going to eat for lunch while they speak",
-                        "Interrupting them to tell your own story",
-                    ],
-                    c: 1,
-                },
+                { q: "Which of these is a sign of a healthy friendship?", a: ["They tell you who you are allowed to be friends with", "They make fun of you to make others laugh", "They listen to your opinions, even when they disagree", "They pressure you to do things you don't want to do"], c: 2 },
+                { q: "What is a red flag in a relationship?", a: ["Your friend wants to spend time with their family", "Your friend gets very angry if you hang out with anyone else", "Your friend tells you they feel sad", "Your friend asks for space to do their homework"], c: 1 },
+                { q: "What is a good way to build a healthy relationship with your classroom teacher?", a: ["Making rude jokes about them and forcing other students to laugh with you", "Being a bad student", "Saying hello every day, participating in class discussions and being respectful"], c: 2 },
+                { q: "Why might a local council ask for feedback from young people about a new park design?", a: ["To ensure the space meets the actual needs of the people using it", "Just to make the project take longer", "Because they don't know how to build a park", "To see who has the best handwriting"], c: 0 },
+                { q: "Which of these is a health-promoting community resource?", a: ["A local library with free workshops", "A community garden", "A PCYC or YMCA youth center", "All of the above"], c: 3 },
+                { q: "A support network in a community can include:", a: ["Teachers and school counsellors", "Coaches at a local sports club", "Family members and trusted neighbours", "All of the above"], c: 3 },
+                { q: "Which is a non-benefit of parent-child communication?", a: ["Yelling at them", "Explaining to them that they have to eat dinner", "Telling them why they have to go to school"], c: 0 },
+                { q: "What is non-verbal communication?", a: ["Sending a text message", "Talking loudly on the phone", "Using body language, facial expressions, and eye contact to share a message", "Writing a letter to a friend"], c: 2 },
+                { q: "What is empathy in a conversation?", a: ["Always agreeing with everything the other person says", "Feeling sorry for someone so you give them money", "Trying to understand and share the feelings of the person you are talking to", "Telling them that their problems aren't a big deal"], c: 2 },
+                { q: "Which of these is an example of active listening?", a: ["Looking at your watch while someone else talks", "Making eye contact and nodding to show you understand", "Thinking about what you are going to eat for lunch while they speak", "Interrupting them to tell your own story"], c: 1 },
             ];
 
             const emotionalSpiritualBase = [
-                {
-                    q: "What is emotional regulation?",
-                    a: [
-                        "Never feeling any big emotions like anger or fear",
-                        "Letting your emotions control everything you do",
-                        "Noticing how you feel and using strategies to stay in control of your actions",
-                        "Hiding your feelings so nobody knows you are sad",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Which of these is a sign of good spiritual wellbeing?",
-                    a: [
-                        "Having the most expensive toys",
-                        "Feeling a sense of belonging and having a clear set of values (knowing what is right and wrong)",
-                        "Being the best at every sport",
-                        "Knowing everything about science",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "How can gratitude improve your spiritual and emotional health?",
-                    a: [
-                        "It makes people give you more presents",
-                        "It trains your brain to notice the good things in life, which can make you feel more peaceful and happy",
-                        "It helps you win arguments",
-                        "It doesn't actually do anything",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "What does it mean to show empathy?",
-                    a: [
-                        "Feeling sorry for yourself all the time",
-                        "Understanding and sharing the feelings of another person",
-                        "Telling someone else how they should feel",
-                        "Only thinking about your own problems",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "Who can you talk to if you are feeling very sad or worried?",
-                    a: [
-                        "A teacher or school counsellor",
-                        "A parent or guardian",
-                        "A trusted family member",
-                        "All of the above",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "Spiritual health is often about connection. This can include a connection to:",
-                    a: [
-                        "A higher power or religion",
-                        "Nature and the environment",
-                        "Your own inner self and values",
-                        "All of the above",
-                    ],
-                    c: 3,
-                },
-
-                {
-                    q: "If two people have different spiritual beliefs, the healthiest approach is usually to:",
-                    a: [
-                        "Try to argue until one person admits they are wrong",
-                        "Ignore the other person and never talk to them",
-                        "Respect their right to have their own beliefs, even if you don't agree",
-                        "Pretend to believe the same thing so there is no conflict",
-                    ],
-                    c: 2,
-                },
-
-                {
-                    q: "Which of these is a way to connect with your inner self?",
-                    a: [
-                        "Watching television with the volume turned up high",
-                        "Writing in a journal about your thoughts and feelings",
-                        "Listening to what your friends think you should do",
-                        "Following the most popular trends on social media",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "When people talk about resilience in spiritual health, they mean:",
-                    a: [
-                        "Being so strong that nothing ever makes you sad",
-                        "Using your inner beliefs and values to help you bounce back from hard times",
-                        "Being able to hold your breath underwater for a long time",
-                        "Never changing your mind about anything",
-                    ],
-                    c: 1,
-                },
-
-                {
-                    q: "What does it mean to have values?",
-                    a: [
-                        "Having a lot of money in your piggy bank",
-                        "Things that are important to you, like being honest or helpful",
-                        "Being the loudest person in the classroom",
-                        "Knowing the names of all the planets",
-                    ],
-                    c: 1,
-                },
+                { q: "What is emotional regulation?", a: ["Never feeling any big emotions like anger or fear", "Letting your emotions control everything you do", "Noticing how you feel and using strategies to stay in control of your actions", "Hiding your feelings so nobody knows you are sad"], c: 2 },
+                { q: "Which of these is a sign of good spiritual wellbeing?", a: ["Having the most expensive toys", "Feeling a sense of belonging and having a clear set of values (knowing what is right and wrong)", "Being the best at every sport", "Knowing everything about science"], c: 1 },
+                { q: "How can gratitude improve your spiritual and emotional health?", a: ["It makes people give you more presents", "It trains your brain to notice the good things in life, which can make you feel more peaceful and happy", "It helps you win arguments", "It doesn't actually do anything"], c: 1 },
+                { q: "What does it mean to show empathy?", a: ["Feeling sorry for yourself all the time", "Understanding and sharing the feelings of another person", "Telling someone else how they should feel", "Only thinking about your own problems"], c: 1 },
+                { q: "Who can you talk to if you are feeling very sad or worried?", a: ["A teacher or school counsellor", "A parent or guardian", "A trusted family member", "All of the above"], c: 3 },
+                { q: "Spiritual health is often about connection. This can include a connection to:", a: ["A higher power or religion", "Nature and the environment", "Your own inner self and values", "All of the above"], c: 3 },
+                { q: "If two people have different spiritual beliefs, the healthiest approach is usually to:", a: ["Try to argue until one person admits they are wrong", "Ignore the other person and never talk to them", "Respect their right to have their own beliefs, even if you don't agree", "Pretend to believe the same thing so there is no conflict"], c: 2 },
+                { q: "Which of these is a way to connect with your inner self?", a: ["Watching television with the volume turned up high", "Writing in a journal about your thoughts and feelings", "Listening to what your friends think you should do", "Following the most popular trends on social media"], c: 1 },
+                { q: "When people talk about resilience in spiritual health, they mean:", a: ["Being so strong that nothing ever makes you sad", "Using your inner beliefs and values to help you bounce back from hard times", "Being able to hold your breath underwater for a long time", "Never changing your mind about anything"], c: 1 },
+                { q: "What does it mean to have values?", a: ["Having a lot of money in your piggy bank", "Things that are important to you, like being honest or helpful", "Being the loudest person in the classroom", "Knowing the names of all the planets"], c: 1 },
             ];
+
             function expandTo10(arr) {
                 let out = [];
-
                 while (out.length < 10) {
                     out = out.concat(arr);
                 }
-
                 return out.slice(0, 10);
             }
 
@@ -915,7 +471,6 @@
                     ...quizDB.social,
                     ...quizDB.emotionalSpiritual,
                 ];
-
                 pool = pool.sort(() => Math.random() - 0.5);
                 return pool.slice(0, 20);
             }
@@ -944,7 +499,6 @@
                     mixedMusic.currentTime = 0;
                     mixedMusic.play();
                 }
-
                 if (type === "physical") physicalMusic.play();
                 if (type === "mental") mentalMusic.play();
                 if (type === "social") socialMusic.play();
@@ -987,13 +541,13 @@
                 });
             }
 
-            /* SAVE */
             function startGame() {
                 data.name = nameInput.value;
                 save();
             }
 
             window.onload = () => {
+                nameInput.value = data.name || "";
                 updateHUD();
                 render();
             };
@@ -1003,6 +557,7 @@
                 save();
             });
         </script>
+
         <!-- TUTORIAL SCREEN -->
         <div
             id="tutorialScreen"
@@ -1083,51 +638,39 @@
         </div>
 
         <script>
-            /* AUDIO */
             const tutorialAudio = new Audio(
                 "https://media.vocaroo.com/mp3/16w9olvZXcps",
             );
-
             tutorialAudio.volume = 1;
 
-            /* ELEMENTS */
             const tutorialScreen = document.getElementById("tutorialScreen");
             const skipTutorial = document.getElementById("skipTutorial");
             const startTutorial = document.getElementById("startTutorial");
 
-            /* LOCK GAME */
             document.body.style.pointerEvents = "none";
             tutorialScreen.style.pointerEvents = "auto";
 
-            /* CLOSE */
             function closeTutorial() {
                 tutorialScreen.style.display = "none";
-
                 document.body.style.pointerEvents = "auto";
-
                 tutorialAudio.pause();
             }
 
-            /* START BUTTON */
             startTutorial.onclick = function () {
                 tutorialAudio.play();
-
                 startTutorial.style.display = "none";
             };
 
-            /* SKIP */
             skipTutorial.onclick = function () {
                 closeTutorial();
             };
 
-            /* AUTO END */
             tutorialAudio.onended = function () {
                 closeTutorial();
             };
         </script>
 
         <!-- LEADERBOARD -->
-
         <div
             id="leaderboardBox"
             style="
@@ -1175,20 +718,22 @@
 
         <script>
             function openLeaderboard() {
-                let leaderboard =
-                    JSON.parse(localStorage.getItem("leaderboard")) || [];
-                let html = "<h2>Leaderboard</h2>";
-                leaderboard.forEach((p, idx) => {
-                    html += `<div>${idx + 1}. ${p.name || "Unknown"} — ${p.points} pts</div>`;
-                });
-                html += `<br><button onclick="closeLeaderboard()">Back</button>`;
-                document.getElementById("leaderboard").innerHTML = html;
-                document.getElementById("leaderboard").style.display = "flex";
+                let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+                let list = document.getElementById("leaderboardList");
+                list.innerHTML = "";
+                if (leaderboard.length === 0) {
+                    list.innerHTML = "<p style='color:#aaa;text-align:center'>No scores yet!</p>";
+                } else {
+                    leaderboard.forEach((p, idx) => {
+                        list.innerHTML += `<div style="padding:8px 0;border-bottom:1px solid #444">${idx + 1}. ${p.name || "Unknown"} — ${p.points} pts</div>`;
+                    });
+                }
+                document.getElementById("leaderboardBox").style.display = "flex";
                 home.style.display = "none";
             }
 
             function closeLeaderboard() {
-                document.getElementById("leaderboard").style.display = "none";
+                document.getElementById("leaderboardBox").style.display = "none";
                 home.style.display = "flex";
             }
         </script>
