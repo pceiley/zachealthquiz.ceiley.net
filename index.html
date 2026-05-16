@@ -176,6 +176,12 @@
             <div id="answers"></div>
         </div>
 
+        <div
+            id="leaderboard"
+            class="screen"
+            style="display: none; flex-direction: column; align-items: center"
+        ></div>
+
         <script>
             /* CORE */
             const hudName = document.getElementById("hudName");
@@ -425,33 +431,27 @@
             /* SAVE */
             function save() {
                 localStorage.setItem("game", JSON.stringify(data));
+
+                // Leaderboard update
+                let leaderboard =
+                    JSON.parse(localStorage.getItem("leaderboard")) || [];
+                leaderboard = leaderboard.filter((x) => x.code !== data.code);
+                leaderboard.push({
+                    name: data.name || "Unknown",
+                    points: data.points,
+                    avatar: data.avatar,
+                    code: data.code,
+                });
+                leaderboard.sort((a, b) => b.points - a.points);
+                leaderboard = leaderboard.slice(0, 20);
+                localStorage.setItem(
+                    "leaderboard",
+                    JSON.stringify(leaderboard),
+                );
+
                 updateHUD();
                 render();
             }
-
-            /* LEADERBOARD SAVE */
-            let leaderboard =
-                JSON.parse(localStorage.getItem("leaderboard")) || [];
-
-            /* REMOVE OLD ENTRY */
-            leaderboard = leaderboard.filter((x) => x.code !== data.code);
-
-            /* ADD UPDATED PLAYER */
-            leaderboard.push({
-                name: data.name || "Unknown",
-                points: data.points,
-                avatar: data.avatar,
-                code: data.code,
-            });
-
-            /* SORT */
-            leaderboard.sort((a, b) => b.points - a.points);
-
-            /* LIMIT */
-            leaderboard = leaderboard.slice(0, 20);
-
-            /* SAVE */
-            localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
 
             function updateHUD() {
                 hudName.innerText = data.name || "";
@@ -1174,64 +1174,21 @@
         </div>
 
         <script>
-            /* LEADERBOARD OPEN */
             function openLeaderboard() {
-                home.style.display = "none";
-                leaderboardBox.style.display = "flex";
-
                 let leaderboard =
                     JSON.parse(localStorage.getItem("leaderboard")) || [];
-
-                leaderboardList.innerHTML = "";
-
-                /* SORT */
-                leaderboard.sort((a, b) => b.points - a.points);
-
-                leaderboard.forEach((p, index) => {
-                    let row = document.createElement("div");
-
-                    row.style.display = "flex";
-                    row.style.alignItems = "center";
-                    row.style.justifyContent = "space-between";
-                    row.style.background = "#333";
-                    row.style.padding = "10px";
-                    row.style.marginBottom = "10px";
-                    row.style.borderRadius = "12px";
-
-                    row.innerHTML = `
-<div style="display:flex;align-items:center;gap:10px;">
-
-<div style="
-font-size:24px;
-width:40px;
-">
-#${index + 1}
-</div>
-
-<img src="${p.avatar}" style="
-width:50px;
-height:50px;
-border-radius:12px;
-object-fit:cover;
-">
-
-<div>
-<div>${p.name}</div>
-<div style="opacity:0.7;font-size:14px;">
-${p.points} Points
-</div>
-</div>
-
-</div>
-`;
-
-                    leaderboardList.appendChild(row);
+                let html = "<h2>Leaderboard</h2>";
+                leaderboard.forEach((p, idx) => {
+                    html += `<div>${idx + 1}. ${p.name || "Unknown"} — ${p.points} pts</div>`;
                 });
+                html += `<br><button onclick="closeLeaderboard()">Back</button>`;
+                document.getElementById("leaderboard").innerHTML = html;
+                document.getElementById("leaderboard").style.display = "flex";
+                home.style.display = "none";
             }
 
-            /* LEADERBOARD CLOSE */
             function closeLeaderboard() {
-                leaderboardBox.style.display = "none";
+                document.getElementById("leaderboard").style.display = "none";
                 home.style.display = "flex";
             }
         </script>
