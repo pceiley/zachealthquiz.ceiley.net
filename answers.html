@@ -66,53 +66,45 @@
             }
 
             @media print {
-                body {
-                    background: white;
-                    color: black;
-                    font-size: 11pt;
+                /* Force white backgrounds on all elements — fixes iOS Safari dark bg bug */
+                *, *::before, *::after {
+                    -webkit-print-color-adjust: economy;
+                    print-color-adjust: economy;
+                    color: black !important;
+                    background: white !important;
+                    box-shadow: none !important;
+                    border-color: #999 !important;
                 }
+
+                body { font-size: 11pt; }
 
                 header {
                     position: static;
-                    background: white;
-                    border-bottom: 2px solid black;
+                    border-bottom: 2px solid black !important;
                     padding: 8px 0;
                 }
 
-                header h1 {
-                    color: black;
-                    font-size: 18pt;
-                }
+                header h1 { font-size: 18pt; }
 
-                .backBtn, .printBtn { display: none; }
+                .backBtn, .printBtn { display: none !important; }
 
                 main {
                     padding: 12px 0;
                     max-width: 100%;
                 }
 
-                .category {
-                    margin-bottom: 24pt;
-                }
+                .category { margin-bottom: 24pt; }
 
                 .category-title {
-                    background: white !important;
-                    color: black;
-                    border-left-width: 4px;
-                    border-left-style: solid;
+                    border-left: 4px solid black !important;
                     padding: 6px 12px;
                     font-size: 14pt;
+                    font-weight: 700;
                     margin-bottom: 8pt;
                 }
 
-                .physical .category-title  { border-left-color: #2ecc71; }
-                .mental .category-title     { border-left-color: #3498db; }
-                .social .category-title     { border-left-color: #9b59b6; }
-                .emotional .category-title  { border-left-color: #e67e22; }
-
                 .question-block {
-                    background: white;
-                    border: 1px solid #ccc;
+                    border: 1px solid #bbb !important;
                     border-radius: 6px;
                     padding: 8px 10px;
                     margin-bottom: 6pt;
@@ -120,27 +112,31 @@
                 }
 
                 .question-text {
-                    color: black;
                     font-size: 10.5pt;
+                    font-weight: 700;
                     margin-bottom: 5pt;
                 }
 
-                .question-num { color: #555; }
+                .question-num { color: #555 !important; }
 
                 .answer {
-                    color: #555;
+                    color: #555 !important;
                     font-size: 10pt;
                     padding: 3px 8px;
                 }
 
+                /* Correct answer: gray underline works on any B&W printer */
                 .answer.correct {
-                    background: #e8f8ee;
-                    color: black;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                    background: #efefef !important;
+                    color: black !important;
                     font-weight: 700;
+                    border-radius: 4px;
                 }
 
-                .answer.correct .marker { color: #1a8a3a; }
-                .answer:not(.correct) .marker { color: transparent; }
+                .answer.correct .marker { color: black !important; }
+                .answer:not(.correct) .marker { visibility: hidden; }
             }
 
             main {
